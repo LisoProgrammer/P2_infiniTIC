@@ -1,0 +1,49 @@
+trigger:
+- main
+
+stages:
+
+# VALIDACIÓN
+- stage: Validate
+  jobs:
+  - job: validate
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - script: |
+        cd terraform/envs/dev
+        terraform init -backend=false
+        terraform fmt -check
+        terraform validate
+
+# DEV
+- stage: Deploy_DEV
+  jobs:
+  - job: deploy
+    steps:
+    - script: |
+        cd terraform/envs/dev
+        terraform init
+        terraform apply -auto-approve -var-file="dev.tfvars"
+
+# STAGING
+- stage: Deploy_STAGING
+  dependsOn: Deploy_DEV
+  jobs:
+  - job: deploy
+    steps:
+    - script: |
+        cd terraform/envs/staging
+        terraform init
+        terraform apply -auto-approve -var-file="staging.tfvars"
+
+# PROD
+- stage: Deploy_PROD
+  dependsOn: Deploy_STAGING
+  jobs:
+  - job: deploy
+    steps:
+    - script: |
+        cd terraform/envs/prod
+        terraform init
+        terraform apply -auto-approve -var-file="prod.tfvars"
