@@ -1,7 +1,22 @@
 trigger:
 - main
 
+variables:
+  RUN_SETUP: "false"
+
 stages:
+
+# INIT
+- stage: Setup
+  displayName: "Inicializar Workspaces"
+  condition: eq(variables['RUN_SETUP'], 'true')
+  jobs:
+  - job: init
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - script: bash scripts/init-workspaces.sh
+      displayName: "Inicializar Workspaces de Terraform"
 
 # VALIDACIÓN
 - stage: Validate
@@ -11,10 +26,10 @@ stages:
       vmImage: ubuntu-latest
     steps:
     - script: |
-        cd terraform/envs/dev
-        terraform init -backend=false
-        terraform fmt -check
+        cd terraform
+        terraform init
         terraform validate
+      displayName: "Validar Terraform"
 
 # DEV
 - stage: Deploy_DEV
@@ -22,9 +37,9 @@ stages:
   - job: deploy
     steps:
     - script: |
-        cd terraform/envs/dev
-        terraform init
-        terraform apply -auto-approve -var-file="dev.tfvars"
+        cd terraform
+        terraform workspace select dev
+        terraform apply -auto-approve
 
 # STAGING
 - stage: Deploy_STAGING
@@ -33,9 +48,9 @@ stages:
   - job: deploy
     steps:
     - script: |
-        cd terraform/envs/staging
-        terraform init
-        terraform apply -auto-approve -var-file="staging.tfvars"
+        cd terraform
+        terraform workspace select staging
+        terraform apply -auto-approve
 
 # PROD
 - stage: Deploy_PROD
@@ -44,6 +59,6 @@ stages:
   - job: deploy
     steps:
     - script: |
-        cd terraform/envs/prod
-        terraform init
-        terraform apply -auto-approve -var-file="prod.tfvars"
+        cd terraform
+        terraform workspace select prod
+        terraform apply -auto-approve
