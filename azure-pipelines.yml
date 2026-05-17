@@ -65,37 +65,32 @@ stages:
 # =========================================
 - stage: Deploy_DEV
   displayName: "Deploy DEV"
-
+ 
   dependsOn: Validate
-
+ 
   jobs:
   - deployment: DeployDev
-
+    displayName: "Desplegar DEV"
+ 
     environment: dev
-
+ 
     pool:
       vmImage: ubuntu-latest
-
+ 
     strategy:
       runOnce:
         deploy:
           steps:
-
+ 
           - script: |
-              curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-              sudo apt-add-repository "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-              sudo apt-get update && sudo apt-get install terraform
-
-              terraform -version
-
               cd terraform
-
+ 
               terraform init
-
+ 
               terraform workspace select dev || terraform workspace new dev
-
+ 
               terraform apply -auto-approve
-
+ 
             displayName: "Terraform Apply DEV"
 
 # =========================================
