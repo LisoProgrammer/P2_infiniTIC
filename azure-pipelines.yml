@@ -228,3 +228,4 @@ stages:
                 terraform workspace select prod || terraform workspace new prod
  
                 terraform apply -auto-approve
+                
