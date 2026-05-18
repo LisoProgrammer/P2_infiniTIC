@@ -53,7 +53,7 @@ stages:
 # =========================================
 - stage: Validate
   displayName: "Validar Terraform"
-  DependsOn: []
+  dependsOn: []
   jobs:
   - job: ValidateTerraform
     displayName: "Terraform Validate"
