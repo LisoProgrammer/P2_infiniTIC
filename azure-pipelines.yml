@@ -12,40 +12,29 @@ stages:
 - stage: Setup
   displayName: "Inicializar Workspaces"
   condition: eq(variables['RUN_SETUP'], 'true')
- 
   jobs:
   - job: InitWorkspaces
     displayName: "Crear Workspaces Terraform"
- 
     pool:
       vmImage: ubuntu-latest
- 
     steps:
     - checkout: self
- 
     - task: AzureCLI@2
       inputs:
         azureSubscription: 'azure-terraform-conn'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
- 
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
           sudo apt-add-repository "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
- 
           sudo apt-get update
           sudo apt-get install terraform -y
- 
           terraform -version
- 
           cd terraform
- 
           terraform init
- 
           terraform workspace select dev || terraform workspace new dev
           terraform workspace select staging || terraform workspace new staging
           terraform workspace select prod || terraform workspace new prod
- 
           terraform workspace list
  
 # =========================================
@@ -57,30 +46,22 @@ stages:
   jobs:
   - job: ValidateTerraform
     displayName: "Terraform Validate"
- 
     pool:
       vmImage: ubuntu-latest
- 
     steps:
     - checkout: self
- 
     - task: AzureCLI@2
       inputs:
         azureSubscription: 'azure-terraform-conn'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
- 
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
           sudo apt-add-repository "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
- 
           sudo apt-get update
           sudo apt-get install terraform -y
- 
           terraform -version
- 
           cd terraform
- 
           terraform init
           terraform fmt -check
           terraform validate
@@ -89,65 +70,34 @@ stages:
 # DEPLOY DEV
 # =========================================
 - stage: Deploy_DEV
-
   displayName: "Deploy DEV"
- 
   dependsOn: Validate
- 
   jobs:
-
   - deployment: DeployDev
- 
     displayName: "Despliegue DEV"
- 
     environment: dev
- 
     pool:
-
       vmImage: ubuntu-latest
- 
     strategy:
-
       runOnce:
-
         deploy:
- 
           steps:
- 
           - checkout: self
- 
           - task: AzureCLI@2
-
             inputs:
-
               azureSubscription: 'azure-terraform-conn'
-
               scriptType: 'bash'
-
               scriptLocation: 'inlineScript'
-
               inlineScript: |
- 
                 echo "Instalando Terraform..."
- 
                 curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
- 
-                sudo apt-add-repository \
-
-                "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
- 
+                sudo apt-add-repository "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
                 sudo apt-get update
- 
                 sudo apt-get install terraform -y
- 
                 terraform -version
- 
                 cd terraform
- 
                 terraform init
- 
                 terraform workspace select dev || terraform workspace new dev
- 
                 terraform apply -auto-approve
  
 # =========================================
@@ -155,47 +105,32 @@ stages:
 # =========================================
 - stage: Deploy_STAGING
   displayName: "Deploy STAGING"
- 
   dependsOn: Deploy_DEV
- 
   jobs:
   - deployment: DeployStaging
     displayName: "Desplegar STAGING"
- 
-    environment:
-      name: staging
- 
+    environment: staging
     pool:
       vmImage: ubuntu-latest
- 
     strategy:
       runOnce:
         deploy:
           steps:
- 
           - checkout: self
- 
           - task: AzureCLI@2
             inputs:
               azureSubscription: 'azure-terraform-conn'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
- 
                 curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
                 sudo apt-add-repository "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
- 
                 sudo apt-get update
                 sudo apt-get install terraform -y
- 
                 terraform -version
- 
                 cd terraform
- 
                 terraform init
- 
                 terraform workspace select staging || terraform workspace new staging
- 
                 terraform apply -auto-approve
  
 # =========================================
@@ -203,45 +138,30 @@ stages:
 # =========================================
 - stage: Deploy_PROD
   displayName: "Deploy PROD"
- 
   dependsOn: Deploy_STAGING
- 
   jobs:
   - deployment: DeployProd
     displayName: "Desplegar PROD"
- 
-    environment:
-      name: prod
- 
+    environment: prod
     pool:
       vmImage: ubuntu-latest
- 
     strategy:
       runOnce:
         deploy:
           steps:
- 
           - checkout: self
- 
           - task: AzureCLI@2
             inputs:
               azureSubscription: 'azure-terraform-conn'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
- 
                 curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
                 sudo apt-add-repository "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
- 
                 sudo apt-get update
                 sudo apt-get install terraform -y
- 
                 terraform -version
- 
                 cd terraform
- 
                 terraform init
- 
                 terraform workspace select prod || terraform workspace new prod
- 
                 terraform apply -auto-approve
